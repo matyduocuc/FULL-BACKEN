@@ -1,0 +1,15 @@
+<!-- Agrega estos permisos a tu AndroidManifest.xml -->
+
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+<!-- Si usas dispositivo físico, agrega también: -->
+<uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+<!-- Dentro de <application>, agrega: -->
+<application
+    android:usesCleartextTraffic="true"
+    ...>
+    <!-- Esto permite HTTP (no HTTPS) para desarrollo local -->
+</application>
+

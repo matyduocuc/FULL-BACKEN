@@ -1,0 +1,152 @@
+Necesito configurar la integración con APIs REST para mi aplicación Android siguiendo la misma estructura que el ejemplo del profesor. Tengo un sistema de microservicios backend corriendo en localhost.
+
+**Estructura que debo seguir (igual al ejemplo):**
+```
+app/src/main/java/com/example/uinavegacion/
+├── data/
+│   └── remote/
+│       └── dto/
+│           ├── [Modelos DTO]
+│           ├── [Api Interface]
+│           └── RemoteModule
+```
+
+**Microservicios Backend:**
+- User Management Service: http://localhost:8081
+- Book Catalog Service: http://localhost:8082
+- Loan Management Service: http://localhost:8083
+- Reports Service: http://localhost:8084
+- Notifications Service: http://localhost:8085
+
+**Endpoints que necesito:**
+
+**User Management Service (puerto 8081):**
+- POST /api/users/register - Body: {name, email, password, phone}
+- POST /api/users/login - Body: {email, password} → Response: {token, user, expiresIn}
+- GET /api/users/{userId} - Header: Authorization: Bearer {token}
+- PUT /api/users/{userId} - Body: {name, phone, profileImageUri}, Header: Authorization
+- POST /api/users/validate-token - Body: {token}
+- POST /api/users/logout - Header: Authorization
+
+**Book Catalog Service (puerto 8082):**
+- GET /api/books?page=0&size=10&sortBy=title&sortDir=ASC
+- GET /api/books/{bookId}
+- GET /api/books/search?q={query}&page=0&size=10
+- GET /api/books/{bookId}/availability
+- GET /api/books/featured?page=0&size=10
+- GET /api/books/category/{category}?page=0&size=10
+
+**Loan Management Service (puerto 8083):**
+- POST /api/loans - Body: {userId, bookId, loanDays}, Header: Authorization
+- GET /api/loans/user/{userId} - Header: Authorization
+- GET /api/loans/user/{userId}/active - Header: Authorization
+- POST /api/loans/{loanId}/return - Header: Authorization
+- PATCH /api/loans/{loanId}/extend - Header: Authorization
+
+**Notifications Service (puerto 8085):**
+- GET /api/notifications/user/{userId}?unreadOnly=false - Header: Authorization
+- GET /api/notifications/user/{userId}/unread-count - Header: Authorization
+- PATCH /api/notifications/{notificationId}/read - Header: Authorization
+
+**Reports Service (puerto 8084):**
+- GET /api/reports/dashboard - Header: Authorization
+
+**Modelos DTO necesarios (data classes en Kotlin):**
+
+1. **UserDto**: id, name, email, phone, role, status, profileImageUri, createdAt, updatedAt
+2. **LoginRequestDto**: email, password
+3. **LoginResponseDto**: token, user (UserDto), expiresIn
+4. **RegisterRequestDto**: name, email, password, phone
+5. **UpdateUserRequestDto**: name, phone, profileImageUri
+6. **TokenValidationRequestDto**: token
+7. **TokenValidationResponseDto**: token, valid, userId, message
+
+8. **BookDto**: id, title, author, isbn, category, publisher, year, description, coverUrl, status, totalCopies, availableCopies, price, featured, createdAt, updatedAt
+9. **BookPageResponseDto**: content (List<BookDto>), totalElements, totalPages, size, number
+10. **BookAvailabilityDto**: bookId, available, availableCopies, totalCopies, message
+
+11. **LoanDto**: id, userId, bookId, loanDate, dueDate, returnDate, status, loanDays, fineAmount, extensionsCount, createdAt, updatedAt
+12. **CreateLoanRequestDto**: userId, bookId, loanDays
+
+13. **NotificationDto**: id, userId, type, title, message, read, priority, createdAt
+
+14. **DashboardStatisticsDto**: totalBooks, totalUsers, totalLoans, activeLoans, overdueLoans, availableBooks, loanedBooks, revenue, dateRange
+
+**Requisitos específicos:**
+
+1. **Crear en `data/remote/dto/` todos los DTOs** como data classes de Kotlin con:
+   - @SerializedName para campos que no coincidan con camelCase
+   - Campos opcionales con `?` donde corresponda
+   - Nombres exactos como los del backend
+
+2. **Crear interfaces de API** (similar a JsonPlaceholderApi del ejemplo):
+   - `UserApi` - Para User Management Service
+   - `BookApi` - Para Book Catalog Service  
+   - `LoanApi` - Para Loan Management Service
+   - `NotificationApi` - Para Notifications Service
+   - `ReportApi` - Para Reports Service
+   
+   Cada interface debe usar:
+   - Anotaciones Retrofit (@GET, @POST, @PUT, @PATCH)
+   - @Path para parámetros de URL
+   - @Query para query parameters
+   - @Body para request body
+   - @Header("Authorization") para el token JWT
+   - suspend functions para Coroutines
+
+3. **Crear RemoteModule** (similar al ejemplo) usando Hilt/Dagger que:
+   - Proporcione instancias de Retrofit para cada servicio
+   - Configure OkHttpClient con logging interceptor
+   - Configure URLs base (para emulador usar 10.0.2.2, para dispositivo físico usar IP configurable)
+   - Proporcione instancias de cada Api interface
+   - Use @Provides y @Singleton donde corresponda
+
+4. **Configurar build.gradle** con dependencias:
+   - Retrofit 2.9.0
+   - Retrofit Gson Converter 2.9.0
+   - OkHttp 4.12.0
+   - OkHttp Logging Interceptor 4.12.0
+   - Gson 2.10.1
+   - Kotlin Coroutines Android 1.7.3
+   - Hilt (si se usa) o Dagger
+
+5. **AndroidManifest.xml**:
+   - Permisos INTERNET y ACCESS_NETWORK_STATE
+   - `android:usesCleartextTraffic="true"`
+
+6. **Configuración de URLs**:
+   - Crear constantes para URLs base de cada servicio
+   - Emulador: `http://10.0.2.2:808X`
+   - Dispositivo físico: `http://192.168.1.X:808X` (configurable)
+
+7. **Manejo de autenticación**:
+   - Los endpoints que requieren token deben recibir `@Header("Authorization") token: String`
+   - El token debe pasarse como "Bearer {token}"
+
+8. **Estructura de respuesta**:
+   - Usar `Response<T>` de Retrofit para manejar errores
+   - Todos los métodos deben ser `suspend fun`
+
+**Ejemplo de estructura esperada (igual al del profesor):**
+
+```
+data/remote/dto/
+├── UserDto.kt
+├── LoginRequestDto.kt
+├── LoginResponseDto.kt
+├── RegisterRequestDto.kt
+├── BookDto.kt
+├── BookPageResponseDto.kt
+├── LoanDto.kt
+├── CreateLoanRequestDto.kt
+├── NotificationDto.kt
+├── DashboardStatisticsDto.kt
+├── UserApi.kt
+├── BookApi.kt
+├── LoanApi.kt
+├── NotificationApi.kt
+├── ReportApi.kt
+└── RemoteModule.kt
+```
+
+Crea todos los archivos siguiendo exactamente la misma estructura y patrón que el ejemplo del profesor, usando Hilt para inyección de dependencias y Retrofit para las llamadas HTTP.

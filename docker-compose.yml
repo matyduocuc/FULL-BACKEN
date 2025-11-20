@@ -1,0 +1,105 @@
+version: '3.8'
+
+services:
+  mysql-users:
+    image: mysql:8.0
+    container_name: library-mysql-users
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: library_users_db
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_users_data:/var/lib/mysql
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-books:
+    image: mysql:8.0
+    container_name: library-mysql-books
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: library_books_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_books_data:/var/lib/mysql
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-loans:
+    image: mysql:8.0
+    container_name: library-mysql-loans
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: library_loans_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - mysql_loans_data:/var/lib/mysql
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-reports:
+    image: mysql:8.0
+    container_name: library-mysql-reports
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: library_reports_db
+    ports:
+      - "3309:3306"
+    volumes:
+      - mysql_reports_data:/var/lib/mysql
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mysql-notifications:
+    image: mysql:8.0
+    container_name: library-mysql-notifications
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: library_notifications_db
+    ports:
+      - "3310:3306"
+    volumes:
+      - mysql_notifications_data:/var/lib/mysql
+    networks:
+      - library-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  mysql_users_data:
+  mysql_books_data:
+  mysql_loans_data:
+  mysql_reports_data:
+  mysql_notifications_data:
+
+networks:
+  library-network:
+    driver: bridge
+
+
