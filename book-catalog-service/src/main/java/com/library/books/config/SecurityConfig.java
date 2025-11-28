@@ -31,9 +31,14 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/actuator/**").permitAll()
+                        // Swagger - TODAS las rutas públicas
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**", "/webjars/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        // API de libros
                         .requestMatchers("/api/books/seed").hasAuthority("ROLE_ADMINISTRADOR")
-                        .requestMatchers("/api/books/**").permitAll() // Permitir acceso público a libros
+                        .requestMatchers("/api/books/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

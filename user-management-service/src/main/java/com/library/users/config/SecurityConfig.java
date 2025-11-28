@@ -33,8 +33,14 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Rutas públicas de autenticación
                         .requestMatchers("/api/users/register", "/api/users/login", "/api/users/validate-token").permitAll()
-                        .requestMatchers("/swagger-ui/**", "/api-docs/**", "/actuator/**").permitAll()
+                        // Swagger - TODAS las rutas públicas
+                        .requestMatchers("/swagger-ui.html", "/swagger-ui/**").permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-resources/**", "/webjars/**").permitAll()
+                        .requestMatchers("/actuator/**").permitAll()
+                        // Rutas de admin
                         .requestMatchers("/api/admin/**").hasAuthority("ROLE_ADMINISTRADOR")
                         .anyRequest().authenticated()
                 )
