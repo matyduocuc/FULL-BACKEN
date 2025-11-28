@@ -44,7 +44,7 @@ public class Loan {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private Status status = Status.ACTIVE;
+    private Status status = Status.PENDING; // Por defecto: pendiente de aprobación
 
     @Column(name = "loan_days", nullable = false)
     @Builder.Default
@@ -67,7 +67,11 @@ public class Loan {
     private LocalDateTime updatedAt;
 
     public enum Status {
-        ACTIVE, RETURNED, OVERDUE, CANCELLED
+        PENDING,    // Pendiente de aprobación por admin
+        ACTIVE,     // Préstamo activo (aprobado)
+        RETURNED,   // Devuelto
+        OVERDUE,    // Vencido (activo pero pasó la fecha)
+        CANCELLED   // Rechazado/Cancelado
     }
 
     public boolean isOverdue() {
@@ -82,6 +86,18 @@ public class Loan {
     public void markAsOverdue() {
         if (isOverdue()) {
             this.status = Status.OVERDUE;
+        }
+    }
+
+    public void approve() {
+        if (this.status == Status.PENDING) {
+            this.status = Status.ACTIVE;
+        }
+    }
+
+    public void reject() {
+        if (this.status == Status.PENDING) {
+            this.status = Status.CANCELLED;
         }
     }
 }

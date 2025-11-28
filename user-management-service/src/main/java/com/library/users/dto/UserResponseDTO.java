@@ -19,6 +19,7 @@ public class UserResponseDTO {
     private String email;
     private String phone;
     private User.Role role;
+    private String roleFrontend; // "Admin" o "User" - compatible con frontend React
     private User.Status status;
     private String profileImageUri;
     private LocalDateTime createdAt;
@@ -31,6 +32,7 @@ public class UserResponseDTO {
                 .email(user.getEmail())
                 .phone(user.getPhone())
                 .role(user.getRole())
+                .roleFrontend(user.getRole() == User.Role.ADMINISTRADOR ? "Admin" : "User")
                 .status(user.getStatus())
                 .profileImageUri(user.getProfileImageUri())
                 .createdAt(user.getCreatedAt())

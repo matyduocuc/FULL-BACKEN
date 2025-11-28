@@ -73,7 +73,7 @@ public class LoanService {
                 .bookId(createDTO.getBookId())
                 .loanDate(loanDate)
                 .dueDate(dueDate)
-                .status(Loan.Status.ACTIVE)
+                .status(Loan.Status.PENDING) // Pendiente de aprobación por admin
                 .loanDays(loanDays)
                 .fineAmount(BigDecimal.ZERO)
                 .extensionsCount(0)
@@ -325,6 +325,93 @@ public class LoanService {
     public List<LoanHistoryResponseDTO> getLoanHistory(Long loanId) {
         return loanHistoryRepository.findByLoanIdOrderByTimestampDesc(loanId).stream()
                 .map(LoanHistoryResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public LoanResponseDTO approveLoan(Long loanId) {
+        log.info("Aprobando préstamo: {}", loanId);
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
+
+        if (loan.getStatus() != Loan.Status.PENDING) {
+            throw new RuntimeException("Solo se pueden aprobar préstamos pendientes");
+        }
+
+        loan.approve();
+        loan = loanRepository.save(loan);
+
+        // Actualizar copias disponibles del libro (reducir 1)
+        bookServiceClient.updateBookCopies(loan.getBookId(), -1).block();
+
+        // Registrar en historial
+        LoanHistory history = LoanHistory.builder()
+                .loanId(loan.getId())
+                .action(LoanHistory.Action.CREATED)
+                .notes("Préstamo aprobado por administrador")
+                .build();
+        loanHistoryRepository.save(history);
+
+        // Crear notificación
+        notificationServiceClient.createNotification(
+                loan.getUserId(),
+                "LOAN_APPROVED",
+                "Préstamo aprobado",
+                "Tu solicitud de préstamo ha sido aprobada. Fecha de devolución: " + loan.getDueDate(),
+                "MEDIUM"
+        ).subscribe();
+
+        log.info("Préstamo {} aprobado exitosamente", loanId);
+
+        return LoanResponseDTO.fromEntity(loan);
+    }
+
+    @Transactional
+    public LoanResponseDTO rejectLoan(Long loanId) {
+        log.info("Rechazando préstamo: {}", loanId);
+
+        Loan loan = loanRepository.findById(loanId)
+                .orElseThrow(() -> new RuntimeException("Préstamo no encontrado"));
+
+        if (loan.getStatus() != Loan.Status.PENDING) {
+            throw new RuntimeException("Solo se pueden rechazar préstamos pendientes");
+        }
+
+        loan.reject();
+        loan = loanRepository.save(loan);
+
+        // Registrar en historial
+        LoanHistory history = LoanHistory.builder()
+                .loanId(loan.getId())
+                .action(LoanHistory.Action.CANCELLED)
+                .notes("Préstamo rechazado por administrador")
+                .build();
+        loanHistoryRepository.save(history);
+
+        // Crear notificación
+        notificationServiceClient.createNotification(
+                loan.getUserId(),
+                "LOAN_REJECTED",
+                "Préstamo rechazado",
+                "Tu solicitud de préstamo ha sido rechazada.",
+                "HIGH"
+        ).subscribe();
+
+        log.info("Préstamo {} rechazado exitosamente", loanId);
+
+        return LoanResponseDTO.fromEntity(loan);
+    }
+
+    public List<LoanResponseDTO> getPendingLoans() {
+        return loanRepository.findByStatus(Loan.Status.PENDING).stream()
+                .map(LoanResponseDTO::fromEntity)
+                .collect(Collectors.toList());
+    }
+
+    public List<LoanResponseDTO> getAllLoans() {
+        return loanRepository.findAll().stream()
+                .map(LoanResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 

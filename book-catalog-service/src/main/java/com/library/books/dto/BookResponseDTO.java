@@ -25,6 +25,7 @@ public class BookResponseDTO {
     private String description;
     private String coverUrl;
     private Book.Status status;
+    private String statusFrontend; // "disponible", "prestado", "reservado" - compatible con frontend React
     private Integer totalCopies;
     private Integer availableCopies;
     private BigDecimal price;
@@ -44,6 +45,7 @@ public class BookResponseDTO {
                 .description(book.getDescription())
                 .coverUrl(book.getCoverUrl())
                 .status(book.getStatus())
+                .statusFrontend(mapStatusToFrontend(book.getStatus()))
                 .totalCopies(book.getTotalCopies())
                 .availableCopies(book.getAvailableCopies())
                 .price(book.getPrice())
@@ -51,6 +53,14 @@ public class BookResponseDTO {
                 .createdAt(book.getCreatedAt())
                 .updatedAt(book.getUpdatedAt())
                 .build();
+    }
+
+    private static String mapStatusToFrontend(Book.Status status) {
+        return switch (status) {
+            case AVAILABLE -> "disponible";
+            case LOANED -> "prestado";
+            case RESERVED -> "reservado";
+        };
     }
 }
 

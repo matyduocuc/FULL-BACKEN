@@ -130,6 +130,36 @@ public class LoanController {
         return ResponseEntity.ok(validation);
     }
 
+    @GetMapping
+    @Operation(summary = "Obtener todos los préstamos", description = "Obtiene la lista de todos los préstamos")
+    public ResponseEntity<List<LoanResponseDTO>> getAllLoans() {
+        List<LoanResponseDTO> loans = loanService.getAllLoans();
+        return ResponseEntity.ok(loans);
+    }
+
+    @GetMapping("/pending")
+    @Operation(summary = "Préstamos pendientes", description = "Obtiene la lista de préstamos pendientes de aprobación")
+    public ResponseEntity<List<LoanResponseDTO>> getPendingLoans() {
+        List<LoanResponseDTO> loans = loanService.getPendingLoans();
+        return ResponseEntity.ok(loans);
+    }
+
+    @PutMapping("/{loanId}/approve")
+    @Operation(summary = "Aprobar préstamo", description = "Aprueba un préstamo pendiente")
+    public ResponseEntity<LoanResponseDTO> approveLoan(
+            @Parameter(description = "ID del préstamo") @PathVariable Long loanId) {
+        LoanResponseDTO loan = loanService.approveLoan(loanId);
+        return ResponseEntity.ok(loan);
+    }
+
+    @PutMapping("/{loanId}/reject")
+    @Operation(summary = "Rechazar préstamo", description = "Rechaza un préstamo pendiente")
+    public ResponseEntity<LoanResponseDTO> rejectLoan(
+            @Parameter(description = "ID del préstamo") @PathVariable Long loanId) {
+        LoanResponseDTO loan = loanService.rejectLoan(loanId);
+        return ResponseEntity.ok(loan);
+    }
+
     private String extractToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
